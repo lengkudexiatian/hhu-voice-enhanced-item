@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>在线体验 · HHU VoiceEnhance</title>
+<meta name="description" content="语音增强效果示例：8kHz 窄带录音重建为 16kHz 宽频音频，前后对比试听。">
+<link rel="stylesheet" href="assets/css/style.css">
+<style>
+    /* 在线体验页专属样式（复用全局设计 token 色板） */
+    .try-wrap { max-width: 860px; margin: 0 auto; }
+
+    .try-hero { text-align: center; padding: 72px 0 8px; }
+    .try-hero .h-section { font-size: 40px; }
+    .try-hero p.lead { max-width: 640px; margin: 18px auto 0; font-size: 17px; color: #4B5563; line-height: 1.8; }
+
+    .try-trust { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin: 26px 0 0; }
+    .try-trust span {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 13px; color: #43506B; background: #F3F6FD;
+        border: 1px solid #E3E9F6; border-radius: 999px; padding: 7px 14px;
+    }
+    .try-trust svg { width: 15px; height: 15px; fill: #165DFF; }
+
+    .try-card { margin-top: 42px; padding: 40px; }
+
+    .notice-box {
+        display: flex; gap: 14px; align-items: flex-start;
+        background: #F2F7FF; border: 1px solid #D6E4FF; border-radius: 14px;
+        padding: 18px 20px; margin-bottom: 30px;
+    }
+    .notice-box .nb-icon {
+        width: 36px; height: 36px; border-radius: 10px; flex: none;
+        background: linear-gradient(135deg, #165DFF, #7B61FF);
+        display: flex; align-items: center; justify-content: center;
+    }
+    .notice-box .nb-icon svg { width: 19px; height: 19px; fill: #fff; }
+    .notice-box h3 { font-size: 16px; color: #0A1024; margin: 0 0 6px; }
+    .notice-box p { font-size: 13.5px; color: #4B5563; line-height: 1.85; margin: 0; }
+    .notice-box code {
+        background: #E8EFFF; color: #165DFF; border-radius: 6px;
+        padding: 1px 6px; font-size: 12.5px;
+    }
+
+    .demo-head { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+    .demo-head .ok-badge {
+        width: 34px; height: 34px; border-radius: 50%; background: #E8F7EF;
+        display: flex; align-items: center; justify-content: center; flex: none;
+    }
+    .demo-head .ok-badge svg { width: 18px; height: 18px; fill: #18A058; }
+    .demo-head h3 { font-size: 18px; color: #0A1024; margin: 0; }
+
+    .try-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+    .try-stat { background: #F7F9FC; border: 1px solid #E7ECF6; border-radius: 12px; padding: 14px; text-align: center; }
+    .try-stat b { display: block; font-size: 17px; color: #0A1024; }
+    .try-stat span { font-size: 12px; color: #7A849E; }
+
+    .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .compare .cp-box { background: #F7F9FC; border: 1px solid #E7ECF6; border-radius: 12px; padding: 14px; }
+    .compare .cp-label { font-size: 12px; color: #7A849E; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .compare .cp-label .cp-tag { font-size: 11px; padding: 2px 8px; border-radius: 999px; }
+    .compare .cp-tag.before { background: #EEF1F7; color: #5B6478; }
+    .compare .cp-tag.after { background: #E8F0FF; color: #165DFF; }
+    .compare audio {
+        width: 100%;
+        height: 40px;
+        display: block;
+        border-radius: 8px;
+        background: #EEF2FA;
+    }
+    .cp-hint { font-size: 12px; color: #7A849E; margin-top: 8px; line-height: 1.7; }
+    .cp-dl {
+        display: inline-block; margin-top: 8px;
+        font-size: 12px; color: #165DFF; text-decoration: none;
+        border-bottom: 1px dashed rgba(22, 93, 255, .4);
+    }
+    .cp-dl:hover { border-bottom-style: solid; }
+
+    .listen-en {
+        margin: 22px 0 0; padding: 16px 18px;
+        background: #F7F9FC; border: 1px solid #E7ECF6;
+        border-left: 3px solid #165DFF; border-radius: 10px;
+        font-size: 14.5px; line-height: 1.9; color: #2B3550;
+        font-style: italic; letter-spacing: .2px;
+    }
+    .listen-en b { color: #0A1024; font-style: normal; font-weight: 600; }
+
+    .howto { margin-top: 34px; padding-top: 28px; border-top: 1px solid #EDF1F8; }
+    .howto h4 { font-size: 16px; color: #0A1024; margin: 0 0 16px; }
+    .howto ol { margin: 0; padding-left: 20px; max-width: 100%; }
+    .howto li { font-size: 13.5px; color: #4B5563; line-height: 2; }
+    .howto li b { color: #0A1024; }
+
+    .try-note { margin-top: 26px; font-size: 13px; color: #7A849E; text-align: center; line-height: 1.8; }
+    .try-note b { color: #18A058; font-weight: 600; }
+
+    @media (max-width: 720px) {
+        .try-hero { padding-top: 48px; }
+        .try-hero .h-section { font-size: 30px; }
+        .try-card { padding: 24px 18px; }
+        .try-stats { grid-template-columns: repeat(2, 1fr); }
+        .compare { grid-template-columns: 1fr; }
+    }
+</style>
+</head>
+<body>
+
+<!-- ================= 顶栏 ================= -->
+<header class="site-header">
+    <div class="header-inner">
+        <a class="brand" href="index.html">
+            <span class="brand-mark">
+                <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
+            </span>
+            <span class="brand-text">
+                <span class="brand-name">HHU VoiceEnhance</span>
+                <span class="brand-sub">AI SPEECH LAB</span>
+            </span>
+        </a>
+
+        <nav class="nav">
+            <a class="nav-link" href="index.html">首页</a>
+            <a class="nav-link" href="about.html">关于我们</a>
+            <a class="nav-link" href="products.html">产品服务</a>
+            <a class="nav-link" href="code.html">核心代码</a>
+            <a class="nav-link" href="contact.html">联系我们</a>
+        </nav>
+
+        <div class="header-actions"><a class="btn btn-primary btn-sm" href="try.html">立即使用</a></div>
+
+        <button class="nav-toggle" type="button" aria-label="打开菜单" aria-expanded="false">
+            <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+        </button>
+    </div>
+</header>
+
+<div class="nav-drawer" id="navDrawer">
+    <a href="index.html">首页</a>
+    <a href="about.html">关于我们</a>
+    <a href="products.html">产品服务</a>
+    <a href="code.html">核心代码</a>
+    <a href="contact.html">联系我们</a>
+    <div class="drawer-foot"><a class="btn btn-primary" href="try.html">立即使用</a></div>
+</div>
+
+<main>
+
+<!-- ================= 在线体验 ================= -->
+<section class="section">
+    <div class="container">
+        <div class="try-wrap">
+
+            <div class="try-hero">
+                <span class="eyebrow"><span class="dot"></span>在线体验 · 效果示例</span>
+                <h2 class="h-section">听听增强前后的差别</h2>
+                <p class="lead">
+                    下面是一段 8kHz 窄带录音与它经模型增强后的结果，可直接试听对比。
+                    不装任何软件，打开网页就能听到效果。
+                </p>
+                <div class="try-trust">
+                    <span>
+                        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        打开即听，无需任何前置步骤
+                    </span>
+                    <span>
+                        <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+                        音频仅保留 4 小时，到期自动删除
+                    </span>
+                    <span>
+                        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        可随时一键立即删除
+                    </span>
+                </div>
+            </div>
+
+            <div class="card try-card">
+
+                <div class="notice-box">
+                    <span class="nb-icon">
+                        <svg viewBox="0 0 24 24"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>
+                    </span>
+                    <div>
+                        <h3>本页为静态展示版</h3>
+                        <p>
+                            这一版部署在 GitHub Pages 上，只有纯静态页面，<b>不会把你的音频上传到任何服务器</b>，
+                            因此页面里只提供已生成的示例音频供试听。<br>
+                            需要自己上传音频、当场增强并下载，请在本地运行后端服务
+                            <code>python app.py</code> 后访问同一页面，即可启用完整的「上传 → 增强 → 下载」流程。
+                        </p>
+                    </div>
+                </div>
+
+                <div class="demo-head">
+                    <span class="ok-badge">
+                        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                    </span>
+                    <h3>示例音频对比</h3>
+                </div>
+
+                <div class="try-stats">
+                    <div class="try-stat"><b>8 kHz</b><span>窄带输入</span></div>
+                    <div class="try-stat"><b>16 kHz</b><span>宽频参考</span></div>
+                    <div class="try-stat"><b>4.65 s</b><span>音频时长</span></div>
+                    <div class="try-stat"><b>4 h</b><span>文件保留期</span></div>
+                </div>
+
+                <div class="compare">
+                    <div class="cp-box">
+                        <div class="cp-label">窄带输入 <span class="cp-tag before">8 kHz</span></div>
+                        <audio controls preload="metadata" playsinline>
+                            <source src="assets/audio/before.wav" type="audio/wav">
+                            您的浏览器不支持音频播放，请<a href="assets/audio/before.wav">点此下载</a>试听。
+                        </audio>
+                        <p class="cp-hint">数据集中的降质样本（data_8_de）：模拟电话信道，带宽被截到 0–4 kHz，高频缺失、听感发闷。</p>
+                        <a class="cp-dl" href="assets/audio/before.wav" download>下载音频（8 kHz）</a>
+                    </div>
+                    <div class="cp-box">
+                        <div class="cp-label">宽频参考 <span class="cp-tag after">16 kHz</span></div>
+                        <audio controls preload="metadata" playsinline>
+                            <source src="assets/audio/after.wav" type="audio/wav">
+                            您的浏览器不支持音频播放，请<a href="assets/audio/after.wav">点此下载</a>试听。
+                        </audio>
+                        <p class="cp-hint">同一段语音的宽频参考（data_16_r），高频细节完整，作为重建目标的对照基准。</p>
+                        <a class="cp-dl" href="assets/audio/after.wav" download>下载音频（16 kHz）</a>
+                    </div>
+                </div>
+
+                <p class="listen-en">
+                    <b>试听例句：</b>Every man who entered the twentys had his own training tricks.
+                </p>
+
+                <div class="howto">
+                    <h4>这个效果是怎么做出来的</h4>
+                    <ol>
+                        <li><b>窄带重建：</b>检测到采样率低于 16 kHz 的语音，先用多相滤波上采样到 16 kHz，恢复被截断的高频带宽。</li>
+                        <li><b>谱减法降噪：</b>对信号做短时傅里叶变换，取能量最低的 10% 帧估计噪声谱，逐帧减去噪声（过减因子 2.0，保留 3% 谱底抑制音乐噪声）。</li>
+                        <li><b>响度规整：</b>处理后统一峰值到 −0.9 dBFS，输出 16bit WAV，保证听感一致。</li>
+                    </ol>
+                </div>
+
+                <p class="try-note">
+                    <b>隐私承诺：</b>本静态页面不含任何数据上报，试听音频仅为内置示例；
+                    本地部署版本上传的音频也只用于当次演示，<b>4 小时后自动删除</b>，绝不外泄、绝不挪作他用。
+                </p>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+</main>
+
+<!-- ================= 页脚 ================= -->
+<footer class="site-footer">
+    <div class="container">
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <a class="brand" href="index.html">
+                    <span class="brand-mark">
+                        <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
+                    </span>
+                    <span class="brand-text">
+                        <span class="brand-name">HHU VoiceEnhance</span>
+                        <span class="brand-sub">AI SPEECH LAB</span>
+                    </span>
+                </a>
+                <p>以生成式声学模型为核心，提供语音重建与音频质检能力，让每一条语音数据清晰可用。</p>
+                <div class="footer-social">
+                    <a href="contact.html" aria-label="在线留言">
+                        <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                    </a>
+                    <a href="contact.html" aria-label="在线沟通">
+                        <svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+                    </a>
+                    <a href="contact.html" aria-label="地址">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                    </a>
+                </div>
+            </div>
+
+            <div class="footer-col">
+                <h4>项目内容</h4>
+                <ul>
+                    <li><a href="products.html">语音超分辨率重建</a></li>
+                    <li><a href="products.html">音频质量评估</a></li>
+                    <li><a href="products.html">本地部署</a></li>
+                    <li><a href="code.html">核心代码</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h4>关于我们</h4>
+                <ul>
+                    <li><a href="about.html">团队简介</a></li>
+                    <li><a href="about.html">发展历程</a></li>
+                    <li><a href="about.html">核心成员</a></li>
+                    <li><a href="about.html">项目与荣誉</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h4>支持与联系</h4>
+                <ul>
+                    <li><a href="try.html">效果示例</a></li>
+                    <li><a href="contact.html">联系团队</a></li>
+                    <li><a href="products.html">产品能力</a></li>
+                    <li><a href="contact.html">常见问题</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <span>© <span data-year>2026</span> HHU VoiceEnhance · 大学生创新创业训练计划项目团队</span>
+            <div class="footer-bottom-links">
+                <a href="contact.html">核心代码</a>
+                <a href="contact.html">网站公告</a>
+                <a href="contact.html">联系我们</a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/site.js"></script>
+<script>Site.init({ waves: false });</script>
+</body>
+</html>

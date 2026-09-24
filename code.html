@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>核心代码 · HHU VoiceEnhance</title>
+<meta name="description" content="HHU VoiceEnhance 核心代码展示：多分辨率 STFT 损失函数、STFT 幅度谱特征提取与训练超参配置。">
+<meta name="keywords" content="语音增强,STFT,多分辨率损失,PyTorch,语音超分辨率">
+<link rel="stylesheet" href="assets/css/style.css">
+<style>
+    /* ---------------- 代码展示区（页面级样式） ---------------- */
+    .nav-link.is-active { color: var(--primary-600); font-weight: 600; }
+    .code-shell {
+        border: 1px solid #1B2540;
+        border-radius: 16px;
+        overflow: hidden;
+        background: #0B1220;
+        box-shadow: 0 18px 44px rgba(10, 16, 36, .16);
+    }
+    .code-head {
+        display: flex; align-items: center; gap: 12px;
+        padding: 12px 16px;
+        background: #111B33;
+        border-bottom: 1px solid #1B2540;
+    }
+    .code-dots { display: flex; gap: 6px; }
+    .code-dots i { width: 11px; height: 11px; border-radius: 50%; display: block; }
+    .code-dots i:nth-child(1) { background: #FF5F57; }
+    .code-dots i:nth-child(2) { background: #FEBC2E; }
+    .code-dots i:nth-child(3) { background: #28C840; }
+    .code-file {
+        font-family: var(--font-mono); font-size: 12.5px; color: #8FA0C4;
+        margin-left: 4px;
+    }
+    .code-lang {
+        margin-left: auto; font-size: 11.5px; letter-spacing: .6px;
+        color: #7B8CB0; border: 1px solid #26324F; border-radius: 999px;
+        padding: 3px 10px; font-family: var(--font-mono);
+    }
+    .code-copy {
+        border: 1px solid #26324F; background: transparent; color: #9FB0D4;
+        font-size: 12px; padding: 4px 12px; border-radius: 999px; cursor: pointer;
+        transition: all .2s ease; font-family: inherit;
+    }
+    .code-copy:hover { border-color: #3C5A9E; color: #D6E2FF; background: rgba(90, 130, 220, .12); }
+    .code-copy.done { border-color: #28C840; color: #7BE495; }
+
+    .code-scroll { overflow-x: auto; }
+    .code-scroll pre {
+        margin: 0; padding: 18px 0 20px;
+        font-family: var(--font-mono); font-size: 13px; line-height: 1.75;
+        white-space: pre; color: #DCE5F7;
+    }
+    .code-scroll code { display: block; counter-reset: ln; }
+    .code-scroll .cl {
+        display: block; position: relative;
+        padding-left: 4.2em; padding-right: 22px; min-height: 1.75em;
+    }
+    .code-scroll .cl::before {
+        counter-increment: ln; content: counter(ln);
+        position: absolute; left: 0; top: 0; width: 3em; text-align: right;
+        color: #3C4A6B; user-select: none;
+    }
+    .code-scroll .cl:hover { background: rgba(120, 160, 255, .05); }
+    /* 目录树模式：不显示行号 */
+    .code-scroll code.no-ln .cl { padding-left: 8px; }
+    .code-scroll code.no-ln .cl::before { content: none; }
+    .tree-br { color: #46598A; }
+
+    .tok-kw { color: #C792EA; }
+    .tok-str { color: #9FE07F; }
+    .tok-num { color: #F79A6B; }
+    .tok-com { color: #6B7A99; font-style: italic; }
+    .tok-dec { color: #FFCB6B; }
+    .tok-fn  { color: #82AAFF; }
+    .tok-blt { color: #89DDFF; }
+
+    .code-note {
+        margin-top: 18px; display: grid; gap: 10px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .code-note div {
+        background: var(--gray-50); border: 1px solid var(--line-soft);
+        border-radius: 12px; padding: 14px 16px;
+        font-size: 13px; line-height: 1.75; color: var(--gray-500);
+    }
+    .code-note b { display: block; color: var(--ink); font-size: 13.5px; margin-bottom: 4px; }
+
+    .code-block-item + .code-block-item { margin-top: 64px; }
+    .code-block-item .cb-head { margin-bottom: 18px; }
+    .code-block-item .cb-head h3 { font-size: 21px; color: var(--ink); margin: 8px 0 8px; }
+    .code-block-item .cb-head p { font-size: 14.5px; line-height: 1.8; color: var(--gray-500); max-width: 780px; }
+
+    @media (max-width: 900px) {
+        .code-note { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 720px) {
+        .code-scroll pre { font-size: 12px; padding: 14px 0 16px; }
+        .code-scroll .cl { padding-left: 3.2em; padding-right: 14px; }
+        .code-scroll .cl::before { width: 2.2em; }
+        .code-file { display: none; }
+    }
+</style>
+</head>
+<body>
+
+<!-- ================= 顶栏 ================= -->
+<header class="site-header">
+    <div class="header-inner">
+        <a class="brand" href="index.html">
+            <span class="brand-mark">
+                <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
+            </span>
+            <span class="brand-text">
+                <span class="brand-name">HHU VoiceEnhance</span>
+                <span class="brand-sub">AI SPEECH LAB</span>
+            </span>
+        </a>
+
+        <nav class="nav">
+            <a class="nav-link" href="index.html">首页</a>
+            <a class="nav-link" href="about.html">关于我们</a>
+            <a class="nav-link" href="products.html">产品服务</a>
+            <a class="nav-link is-active" href="code.html">核心代码</a>
+            <a class="nav-link" href="contact.html">联系我们</a>
+        </nav>
+
+        <div class="header-actions"><a class="btn btn-primary btn-sm" href="try.html">立即使用</a></div>
+
+        <button class="nav-toggle" type="button" aria-label="打开菜单" aria-expanded="false">
+            <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+        </button>
+    </div>
+</header>
+
+<div class="nav-drawer" id="navDrawer">
+    <a href="index.html">首页</a>
+    <a href="about.html">关于我们</a>
+    <a href="products.html">产品服务</a>
+    <a href="code.html">核心代码</a>
+    <a href="contact.html">联系我们</a>
+    <div class="drawer-foot"><a class="btn btn-primary" href="try.html">立即使用</a></div>
+</div>
+
+<main>
+
+<!-- ================= 页头 ================= -->
+<section class="section-sm">
+    <div class="container">
+        <div class="section-head reveal">
+            <span class="eyebrow"><span class="dot"></span>技术实现</span>
+            <h2 class="h-section">我们自己写的核心代码</h2>
+            <p class="lead">
+                模型训练与推理的骨干代码全部由团队独立完成。这里摘出几段最能说明技术路线的片段：
+                <b>多分辨率 STFT 损失</b>决定模型「学什么」，<b>STFT 幅度谱特征提取</b>决定模型「看什么」，
+                <b>训练超参</b>决定这两者怎么被稳定地训出来，而<b>数据管线的目录组织</b>则决定输入与标签能不能严格对齐。
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- ================= 代码块 1：多分辨率 STFT 损失 ================= -->
+<section class="section-sm">
+    <div class="container">
+        <div class="code-block-item reveal">
+            <div class="cb-head">
+                <span class="eyebrow"><span class="dot"></span>01 · 损失函数</span>
+                <h3>多分辨率 STFT 损失（MultiResolutionSTFTLoss）</h3>
+                <p>
+                    语音重建只优化时域波形容易「听着糊」，所以我们把监督信号放到频域：对同一段音频用 1024 点 FFT、120 帧移、600 点汉宁窗做短时傅里叶变换，同时算
+                    <b>谱收敛损失</b>（约束整体能量分布）与 <b>对数幅度损失</b>（约束弱能量频段的细节）。窗口以 buffer 形式挂载进 module，
+                    训练时随模型一起搬到 GPU，避免每次前向重复构造。
+                </p>
+            </div>
+
+            <div class="code-shell">
+                <div class="code-head">
+                    <span class="code-dots"><i></i><i></i><i></i></span>
+                    <span class="code-file">losses.py</span>
+                    <span class="code-lang">PYTHON</span>
+                    <button class="code-copy" type="button" data-copy>复制</button>
+                </div>
+                <div class="code-scroll">
+<pre><code>class MultiResolutionSTFTLoss(nn.Module):
+    def __init__(self, fft_size=1024, shift_size=120, win_length=600, window="hann_window"):
+        super().__init__()
+        self.fft_size = fft_size
+        self.shift_size = shift_size
+        self.win_length = win_length
+        self.register_buffer("window", getattr(torch, window)(win_length))
+        self.spectral_convergence_loss = SpectralConvergenceLoss()
+        self.log_stft_magnitude_loss = LogSTFTMagnitudeLoss()
+
+    def forward(self, x, y):
+        x_mag = stft(x, self.fft_size, self.shift_size, self.win_length, self.window)
+        y_mag = stft(y, self.fft_size, self.shift_size, self.win_length, self.window)
+        sc_loss = self.spectral_convergence_loss(x_mag, y_mag)
+        mag_loss = self.log_stft_magnitude_loss(x_mag, y_mag)
+        return sc_loss, mag_loss</code></pre>
+                </div>
+            </div>
+
+            <div class="code-note">
+                <div><b>为什么用频域监督</b>时域 L1 对高频细节不敏感，频谱约束才能让重建出的辅音齿音真实。</div>
+                <div><b>为什么要「多分辨率」</b>单一窗长只能覆盖有限的时间-频率粒度，多组参数叠加可减少金属声与过平滑。</div>
+                <div><b>register_buffer 的作用</b>把窗函数登记为不可训练参数，随 .to(device) 自动迁移，且会被 state_dict 保存。</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ================= 代码块 2：STFT 特征提取 ================= -->
+<section class="section-sm">
+    <div class="container">
+        <div class="code-block-item reveal">
+            <div class="cb-head">
+                <span class="eyebrow"><span class="dot"></span>02 · 特征提取</span>
+                <h3>STFT 幅度谱特征模块</h3>
+                <p>
+                    模型入口统一在这里把波形转成复数频谱，再取模作为网络输入。使用 PyTorch 新版 API 的
+                    <b>return_complex=True</b> 直接拿到复数张量，避免旧接口的复数类型警告，同时保证在 torchscript 导出与半精度推理下行为一致。
+                </p>
+            </div>
+
+            <div class="code-shell">
+                <div class="code-head">
+                    <span class="code-dots"><i></i><i></i><i></i></span>
+                    <span class="code-file">stft_module.py</span>
+                    <span class="code-lang">PYTHON</span>
+                    <button class="code-copy" type="button" data-copy>复制</button>
+                </div>
+                <div class="code-scroll">
+<pre><code>class STFT(nn.Module):
+    def __init__(self, nfft=1024, hop=256):
+        super().__init__()
+        self.nfft = nfft
+        self.hop = hop
+        self.register_buffer('window', torch.hann_window(nfft), False)
+
+    @torch.no_grad()
+    def forward(self, x):
+        # x: [B, T]
+        stft = torch.stft(
+            x, self.nfft, self.hop,
+            window=self.window,
+            return_complex=True   # 用新 API，避免警告
+        )  # [B, F, TT] 复数张量
+        mag = torch.abs(stft)  # [B, F, TT]
+        return mag</code></pre>
+                </div>
+            </div>
+
+            <div class="code-note">
+                <div><b>no_grad 的意义</b>特征提取是固定变换，不需要梯度，关掉计算图能省下可观的显存。</div>
+                <div><b>复数频谱的取舍</b>保留复数则相位也参与建模，取模（幅度谱）则更稳、更省参数，适合本项目的重建目标。</div>
+                <div><b>窗长与帧移</b>1024 / 256 对应约 64ms 窗、16ms 帧移，语音的短时平稳假设下兼顾频率分辨率与时间分辨率。</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ================= 代码块 3：训练超参 ================= -->
+<section class="section-sm">
+    <div class="container">
+        <div class="code-block-item reveal">
+            <div class="cb-head">
+                <span class="eyebrow"><span class="dot"></span>03 · 训练配置</span>
+                <h3>训练超参配置</h3>
+                <p>
+                    整套实验的超参集中在一处管理，脚本、评测与推理共用同一份配置，保证「跑出来的结果」和「写进报告的指标」是同一套设置。
+                    小批量 + 小学习率配合梯度裁剪，是我们能在有限显存下把训练跑稳的关键。
+                </p>
+            </div>
+
+            <div class="code-shell">
+                <div class="code-head">
+                    <span class="code-dots"><i></i><i></i><i></i></span>
+                    <span class="code-file">hparams.py</span>
+                    <span class="code-lang">PYTHON</span>
+                    <button class="code-copy" type="button" data-copy>复制</button>
+                </div>
+                <div class="code-scroll">
+<pre><code># 训练参数
+batch_size = 4
+epochs = 50
+learning_rate = 1e-4
+weight_decay = 1e-5
+train_ratio = 0.9
+val_interval = 1
+save_interval = 5
+grad_clip = 5.0</code></pre>
+                </div>
+            </div>
+
+            <div class="code-note">
+                <div><b>batch_size = 4</b>受显存限制取小批量，配合多分辨率损失的多路前向仍能稳定收敛。</div>
+                <div><b>lr 1e-4 / wd 1e-5</b>Adam 学习率，L2 正则很轻——语音任务上强正则会明显拖慢拟合。</div>
+                <div><b>grad_clip = 5.0</b>谱收敛损失在个别批次会给出大梯度，裁剪上限避免训练被单批数据带偏。</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ================= 代码块 4：数据处理管线与训练产物 ================= -->
+<section class="section-sm">
+    <div class="container">
+        <div class="code-block-item reveal">
+            <div class="cb-head">
+                <span class="eyebrow"><span class="dot"></span>04 · 数据与产物</span>
+                <h3>数据处理管线与训练产物</h3>
+                <p>
+                    语音任务里，数据组织方式基本决定了模型能学到什么。我们的语料按「原始 → 清洗 → 成对样本 → 模型权重」四层组织，
+                    每一层目录只做一件事：<b>data_source</b> 是不动的原始来源，<b>data_prep</b> 是统一采样率与响度后的清洗产物，
+                    <b>data_8_de</b> 与 <b>data_16_r</b> 则是一一对应的「降质输入 / 干净参考」样本对——这正是监督学习的目标来源。
+                    训练结束后，验证集上表现最好的那一轮权重单独落盘为 <b>best_model.pth</b>。
+                </p>
+            </div>
+
+            <div class="code-shell">
+                <div class="code-head">
+                    <span class="code-dots"><i></i><i></i><i></i></span>
+                    <span class="code-file">dataset / checkpoints</span>
+                    <span class="code-lang">TREE</span>
+                    <button class="code-copy" type="button" data-copy>复制</button>
+                </div>
+                <div class="code-scroll">
+<pre><code data-tree>dataset/
+├── data_source/        # 原始语料，只读不改动
+├── data_prep/          # 清洗产物：统一 16kHz / 响度规整 / 分段
+├── data_8_de/          # 降质输入：8kHz 窄带副本（模拟电话信道）
+└── data_16_r/          # 干净参考：16kHz 宽频真值（监督目标）
+
+checkpoints/
+└── best_model.pth      # 验证集最优权重（模型参数 + 优化器状态）</code></pre>
+                </div>
+            </div>
+
+            <div class="code-note">
+                <div><b>为什么要成对目录</b>data_8_de 与 data_16_r 文件名一一对应，训练时按同名配对取样本，才不会出现输入与标签错位。</div>
+                <div><b>为什么保留 data_prep</b>原始语料采样率与响度参差不齐，先统一再降质，保证「8k 输入」的退化只来自带宽截断这一个变量。</div>
+                <div><b>best_model.pth 的存法</b>按验证集指标保存最优轮（不是最后一轮），并连同优化器状态一起存，随时可断点续训或直接推理。</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ================= CTA ================= -->
+<section class="section">
+    <div class="container">
+        <div class="cta-band reveal">
+            <div class="cta-inner">
+                <h2>想看它跑起来的样子？</h2>
+                <p>用一段 8kHz 电话录音试试，30 秒内就能听到重建后的宽频语音。</p>
+                <div class="cta-actions">
+                    <a class="btn btn-lg" style="background:#fff;color:#0B1220;" href="try.html">
+                        立即使用
+                        <svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+                    </a>
+                    <a class="btn btn-light btn-lg" href="products.html">查看产品能力</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+</main>
+
+<!-- ================= 页脚 ================= -->
+<footer class="site-footer">
+    <div class="container">
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <a class="brand" href="index.html">
+                    <span class="brand-mark">
+                        <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
+                    </span>
+                    <span class="brand-text">
+                        <span class="brand-name">HHU VoiceEnhance</span>
+                        <span class="brand-sub">AI SPEECH LAB</span>
+                    </span>
+                </a>
+                <p>以自研声学模型为核心，提供语音超分辨率重建与音频质量评估能力，让每一条语音数据清晰可用。</p>
+                <div class="footer-social">
+                    <a href="contact.html" aria-label="在线留言">
+                        <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                    </a>
+                    <a href="contact.html" aria-label="在线沟通">
+                        <svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+                    </a>
+                    <a href="contact.html" aria-label="地址">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                    </a>
+                </div>
+            </div>
+
+            <div class="footer-col">
+                <h4>项目内容</h4>
+                <ul>
+                    <li><a href="products.html">语音超分辨率重建</a></li>
+                    <li><a href="products.html">音频质量评估</a></li>
+                    <li><a href="code.html">核心代码</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h4>关于我们</h4>
+                <ul>
+                    <li><a href="about.html">团队简介</a></li>
+                    <li><a href="about.html">发展历程</a></li>
+                    <li><a href="about.html">核心团队</a></li>
+                    <li><a href="about.html">项目与荣誉</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h4>支持与联系</h4>
+                <ul>
+                    <li><a href="try.html">立即使用</a></li>
+                    <li><a href="code.html">技术实现</a></li>
+                    <li><a href="contact.html">联系我们</a></li>
+                    <li><a href="contact.html">网站公告</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <span>© <span data-year>2026</span> HHU VoiceEnhance · 大学生创新创业训练计划项目团队</span>
+            <div class="footer-bottom-links">
+                <a href="code.html">核心代码</a>
+                <a href="contact.html">网站公告</a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script src="assets/js/site.js"></script>
+<script>
+(function () {
+    'use strict';
+    Site.init();
+
+    /* 极简 Python 语法高亮：按 token 匹配后统一转义再回填，避免嵌套替换出错 */
+    var PY_RE = new RegExp([
+        '("""[\\s\\S]*?"""|"(?:[^"\\\\\\n]|\\\\.)*"|\'(?:[^\'\\\\\\n]|\\\\.)*\')', // 1 字符串
+        '(#[^\\n]*)',                                                              // 2 注释
+        '\\b(class|def|return|import|from|if|elif|else|for|while|in|is|not|and|or|None|True|False|lambda|with|as|try|except|finally|pass|yield|raise|global|assert|del)\\b', // 3 关键字
+        '(@[\\w.]+)',                                                              // 4 装饰器
+        '\\b(self|super)\\b',                                                      // 5 内置/自引用
+        '\\b(\\d+\\.?\\d*(?:[eE]-?\\d+)?)\\b',                                     // 6 数字
+        '\\b([A-Za-z_]\\w*)(?=\\()'                                                // 7 函数调用
+    ].join('|'), 'g');
+
+    var CLS = { 1: 'tok-str', 2: 'tok-com', 3: 'tok-kw', 4: 'tok-dec', 5: 'tok-blt', 6: 'tok-num', 7: 'tok-fn' };
+
+    function escapeHtml(s) {
+        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function highlight(src) {
+        var out = '', last = 0;
+        src.replace(PY_RE, function (m) {
+            var cls = '';
+            for (var i = 1; i < arguments.length - 2; i++) {
+                if (arguments[i] !== undefined) { cls = CLS[i] || ''; break; }
+            }
+            out += escapeHtml(src.slice(last, arguments[arguments.length - 2]));
+            out += cls ? '<span class="' + cls + '">' + escapeHtml(m) + '</span>' : escapeHtml(m);
+            last = arguments[arguments.length - 2] + m.length;
+            return m;
+        });
+        out += escapeHtml(src.slice(last));
+        return out;
+    }
+
+    var blocks = [].slice.call(document.querySelectorAll('.code-scroll code'));
+
+    blocks.forEach(function (codeEl) {
+        var raw = codeEl.textContent.replace(/\s+$/, '');
+        var lines;
+
+        if (codeEl.hasAttribute('data-tree')) {
+            // 目录树：不套语法高亮、不带行号，只弱化分枝符号、注释统一灰化
+            codeEl.classList.add('no-ln');
+            lines = escapeHtml(raw)
+                .replace(/(#[^\n]*)/g, '<span class="tok-com">$1</span>')
+                .replace(/([│├└─]+)/g, '<span class="tree-br">$1</span>')
+                .split('\n');
+        } else {
+            lines = highlight(raw).split('\n');
+        }
+
+        codeEl.innerHTML = lines
+            .map(function (line) { return '<span class="cl">' + line + '</span>'; })
+            .join('');
+    });
+
+    /* 复制按钮 */
+    [].slice.call(document.querySelectorAll('[data-copy]')).forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var code = btn.closest('.code-shell').querySelector('code');
+            var lines = [].map.call(code.querySelectorAll('.cl'), function (l) { return l.textContent; });
+            var text = lines.length ? lines.join('\n') : code.textContent;
+            var done = function () {
+                btn.textContent = '已复制';
+                btn.classList.add('done');
+                setTimeout(function () { btn.textContent = '复制'; btn.classList.remove('done'); }, 1600);
+            };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(done, function () { fallback(text, done); });
+            } else {
+                fallback(text, done);
+            }
+        });
+    });
+
+    function fallback(text, done) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); done(); } catch (e) { /* 忽略 */ }
+        document.body.removeChild(ta);
+    }
+})();
+</script>
+</body>
+</html>

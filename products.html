@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>产品服务 · HHU VoiceEnhance</title>
+<meta name="description" content="HHU VoiceEnhance 的能力模块：语音超分辨率重建、音频质量评估、本地部署与调用示例，以及完整的技术实现说明。">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+    <div class="header-inner">
+        <a class="brand" href="index.html">
+            <span class="brand-mark">
+                <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
+            </span>
+            <span class="brand-text">
+                <span class="brand-name">HHU VoiceEnhance</span>
+                <span class="brand-sub">AI SPEECH LAB</span>
+            </span>
+        </a>
+        <nav class="nav">
+            <a class="nav-link" href="index.html">首页</a>
+            <a class="nav-link" href="about.html">关于我们</a>
+            <a class="nav-link" href="products.html">产品服务</a>
+            <a class="nav-link" href="code.html">核心代码</a>
+            <a class="nav-link" href="contact.html">联系我们</a>
+        </nav>
+        <div class="header-actions"><a class="btn btn-primary btn-sm" href="try.html">立即使用</a></div>
+        <button class="nav-toggle" type="button" aria-label="打开菜单" aria-expanded="false">
+            <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+        </button>
+    </div>
+</header>
+
+<div class="nav-drawer" id="navDrawer">
+    <a href="index.html">首页</a>
+    <a href="about.html">关于我们</a>
+    <a href="products.html">产品服务</a>
+    <a href="code.html">核心代码</a>
+    <a href="contact.html">联系我们</a>
+    <div class="drawer-foot"><a class="btn btn-primary" href="try.html">立即使用</a></div>
+</div>
+
+<main>
+
+<!-- ================= 页头 ================= -->
+<section class="page-hero">
+    <div class="container">
+        <div class="page-hero-inner">
+            <div class="crumb">
+                <a href="index.html">首页</a>
+                <span class="sep">/</span>
+                <b>产品服务</b>
+            </div>
+            <h1>从模型到页面，一套自己写的管线</h1>
+            <p>
+                重建、评测、部署、演示，每个环节都能单独看、单独跑。
+                这里的每一项能力都对应仓库里真实存在的代码，不是画出来的架构图。
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- ================= 产品矩阵 ================= -->
+<section class="section">
+    <div class="container">
+        <div class="section-head reveal">
+            <span class="eyebrow"><span class="dot"></span>能力模块</span>
+            <h2 class="h-section">看看项目包含哪些模块</h2>
+        </div>
+
+        <div class="tabs reveal" data-tabs role="tablist">
+            <button class="tab active" type="button" data-value="all" data-on-tab="renderProducts" role="tab" aria-selected="true">全部能力</button>
+            <button class="tab" type="button" data-value="core" data-on-tab="renderProducts" role="tab" aria-selected="false">核心引擎</button>
+            <button class="tab" type="button" data-value="solution" data-on-tab="renderProducts" role="tab" aria-selected="false">工程实现</button>
+        </div>
+
+        <div class="grid grid-3" id="productList">
+            <div class="skeleton" style="height:280px;"></div>
+            <div class="skeleton" style="height:280px;"></div>
+            <div class="skeleton" style="height:280px;"></div>
+        </div>
+    </div>
+</section>
+
+<!-- ================= 服务流程 ================= -->
+<section class="section section-soft">
+    <div class="container">
+        <div class="section-head center reveal">
+            <span class="eyebrow"><span class="dot"></span>推进方式</span>
+            <h2 class="h-section">四步，从样本到能听的效果</h2>
+            <p class="lead">大创项目按阶段推进，每一步都有明确的产出物和检查点，也都有对应的实验记录。</p>
+        </div>
+
+        <div class="steps reveal">
+            <div class="step">
+                <span class="snum">01</span>
+                <h4>样本分析</h4>
+                <p>整理窄带语音样本，分析信道带宽、噪声类型与退化程度，确定这次要解决的核心问题。</p>
+            </div>
+            <div class="step">
+                <span class="snum">02</span>
+                <h4>方案与评测</h4>
+                <p>确定重建技术路线，建立客观指标（PESQ / STOI）与主观听测的基线，先把尺子立起来。</p>
+            </div>
+            <div class="step">
+                <span class="snum">03</span>
+                <h4>系统实现</h4>
+                <p>完成模型推理服务与网页端的联调，打通「上传 → 重建 → 试听/下载」的完整链路。</p>
+            </div>
+            <div class="step">
+                <span class="snum">04</span>
+                <h4>迭代与回归</h4>
+                <p>按听测反馈调整参数，重跑评测做回归对比，把每一轮结果都记录进实验台账。</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ================= 使用方式 ================= -->
+<section class="section">
+    <div class="container">
+        <div class="section-head center reveal">
+            <span class="eyebrow"><span class="dot"></span>怎么用</span>
+            <h2 class="h-section">三种方式上手这个项目</h2>
+            <p class="lead">项目不收费，也不做商用服务。想听效果、想看代码、想聊技术，下面三条路都通。</p>
+        </div>
+
+        <div class="grid grid-3">
+            <div class="plan reveal" data-delay="1">
+                <div class="pname">在线试听</div>
+                <div class="pfor">最快的方式，打开网页即可</div>
+                <div class="pamt">
+                    <span class="val">试听</span>
+                    <span class="per">/ 无需任何准备</span>
+                </div>
+                <ul>
+                    <li><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>窄带输入与宽频参考对比试听</li>
+                    <li><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>示例音频取自项目数据集</li>
+                    <li><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>页面不联网、不上报任何数据</li>
+                </ul>
+                <a class="btn btn-ghost btn-block" href="try.html">去试听</a>
+            </div>
+
+            <div class="plan featured reveal" data-delay="2">
+                <div class="pname">本地运行</div>
+                <div class="pfor">把完整链路跑在自己机器上</div>
+                <div class="pamt">
+                    <span class="val">自建</span>
+                    <span class="per">/ 一台带显卡的电脑</span>
+                </div>
+                <ul>
+                    <li><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>Python + MySQL 环境，脚本一键起服务</li>
+                    <li><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>上传 → 重建 → 下载全链路可跑</li>
+                    <li><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>临时文件 4 小时后自动删除</li>
+                </ul>
+                <a class="btn btn-primary btn-block" href="code.html">看核心代码</a>
+            </div>
+
+            <div class="plan reveal" data-delay="3">
+                <div class="pname">交流讨论</div>
+                <div class="pfor">技术细节、数据集与评测方法</div>
+                <div class="pamt">
+                    <span class="val">开放</span>
+                    <span class="per">/ 欢迎提问与指正</span>
+                </div>
+                <ul>
+                    <li><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>模型结构、损失设计与训练细节</li>
+                    <li><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>数据集构建与评测口径</li>
+                    <li><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>也欢迎指出我们做得不对的地方</li>
+                </ul>
+                <a class="btn btn-ghost btn-block" href="contact.html">联系我们</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ================= 常见问题 ================= -->
+<section class="section section-soft">
+    <div class="container-narrow">
+        <div class="section-head reveal">
+            <span class="eyebrow"><span class="dot"></span>常见问题</span>
+            <h2 class="h-section">看到这里，你可能想问</h2>
+        </div>
+
+        <div class="reveal" data-faq-group>
+            <div class="faq-item open">
+                <button class="faq-q" type="button" aria-expanded="true">
+                    这是商业产品吗？
+                    <span class="chev"><svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></span>
+                </button>
+                <div class="faq-a">
+                    <p>不是。这是大学生创新创业训练计划项目，由四位同学在 2025–2026 年完成，不收费、不提供商用服务。网站上展示的能力都对应真实存在的代码与实验记录，欢迎交流指正。</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-q" type="button" aria-expanded="false">
+                    支持哪些输入格式与采样率？
+                    <span class="chev"><svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></span>
+                </button>
+                <div class="faq-a">
+                    <p>当前实现以 WAV 为主要输入格式，8kHz 到 48kHz 的采样率都能处理：低于 16kHz 的窄带语音会先做带宽重建，再统一输出 16kHz / 16bit WAV。MP3、FLAC 等格式可先转成 WAV 再处理。</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-q" type="button" aria-expanded="false">
+                    重建后一定比原音频好听吗？
+                    <span class="chev"><svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></span>
+                </button>
+                <div class="faq-a">
+                    <p>在模型覆盖的信道与噪声类型下，客观指标与主观听感都有提升。但对已严重削波、丢帧或存在大量静音段的音频，能恢复的信息存在上限。我们会在结果说明里如实给出适用范围，不做过度承诺。</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-q" type="button" aria-expanded="false">
+                    处理速度如何？可以实时吗？
+                    <span class="chev"><svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></span>
+                </button>
+                <div class="faq-a">
+                    <p>实测在单张消费级显卡上，几秒长度的语音可在十几秒内完成重建，属于「离线批处理」量级，目前还没有做实时流式处理。这是后续可以继续优化的方向之一。</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-q" type="button" aria-expanded="false">
+                    我的音频会被留存或用于训练吗？
+                    <span class="chev"><svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></span>
+                </button>
+                <div class="faq-a">
+                    <p>不会。这个静态站点本身没有上传功能，试听的是仓库内置的示例音频；本地部署版本处理完的临时文件也只保留 4 小时，到期由后台任务自动删除，不会用于任何训练用途。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ================= CTA ================= -->
+<section class="section-sm" style="padding-bottom:var(--section-y);">
+    <div class="container">
+        <div class="cta-band reveal">
+            <div class="cta-inner">
+                <h2>先用一段样本试试效果</h2>
+                <p>打开网页即可试听重建效果；本地部署版上传的音频仅临时保留 4 小时，到期自动删除，不外泄、不滥用。</p>
+                <div class="cta-actions">
+                    <a class="btn btn-lg" style="background:#fff;color:#0B1220;" href="try.html">
+                        立即使用
+                        <svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+                    </a>
+                    <a class="btn btn-light btn-lg" href="contact.html">联系我们</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+</main>
+
+<footer class="site-footer">
+    <div class="container">
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <a class="brand" href="index.html">
+                    <span class="brand-mark">
+                        <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
+                    </span>
+                    <span class="brand-text">
+                        <span class="brand-name">HHU VoiceEnhance</span>
+                        <span class="brand-sub">AI SPEECH LAB</span>
+                    </span>
+                </a>
+                <p>大学生创新创业训练计划项目：自研声学模型做窄带语音的宽频重建，让每一条语音数据清晰可用。</p>
+                <div class="footer-social">
+                    <a href="contact.html" aria-label="在线留言">
+                        <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                    </a>
+                    <a href="contact.html" aria-label="在线沟通">
+                        <svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+                    </a>
+                    <a href="contact.html" aria-label="所在地区">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                    </a>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h4>项目内容</h4>
+                <ul>
+                    <li><a href="products.html">语音超分辨率重建</a></li>
+                    <li><a href="products.html">音频质量评估</a></li>
+                    <li><a href="products.html">本地部署</a></li>
+                    <li><a href="code.html">核心代码</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>关于我们</h4>
+                <ul>
+                    <li><a href="about.html">团队简介</a></li>
+                    <li><a href="about.html">发展历程</a></li>
+                    <li><a href="about.html">核心团队</a></li>
+                    <li><a href="about.html">项目与荣誉</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>支持与联系</h4>
+                <ul>
+                    <li><a href="try.html">立即使用</a></li>
+                    <li><a href="contact.html">联系团队</a></li>
+                    <li><a href="contact.html">常见问题</a></li>
+                    <li><a href="contact.html">常见问题</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span>© <span data-year>2026</span> HHU VoiceEnhance · 大学生创新创业训练计划项目团队</span>
+            <div class="footer-bottom-links">
+                <a href="contact.html">核心代码</a>
+                <a href="contact.html">网站公告</a>
+                <a href="contact.html">联系我们</a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/site.js"></script>
+<script>
+(function () {
+    'use strict';
+
+    var listEl = document.getElementById('productList');
+    var currentCategory = 'all';
+
+    function esc(s) { return Store.utils.escapeHtml(s); }
+
+    function render(list) {
+        if (!listEl) return;
+
+        if (!list.length) {
+            listEl.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">' +
+                '<div class="es-title">该分类下暂无产品</div>' +
+                '<div class="es-desc">请切换其他分类查看</div></div>';
+            return;
+        }
+
+        listEl.innerHTML = list.map(function (p, i) {
+            var features = (p.features || []).map(function (f) {
+                return '<span>' + esc(f) + '</span>';
+            }).join('');
+
+            return '<article class="product-card reveal in">' +
+                '<span class="ptag ' + esc(p.tone || 'blue') + '">' + esc(p.tag || '能力') + '</span>' +
+                '<h3 class="h-card">' + esc(p.name) + '</h3>' +
+                '<p class="pdesc">' + esc(p.desc) + '</p>' +
+                '<div class="pfeat">' + features + '</div>' +
+                '<div class="pfoot">' +
+                    '<span class="price">' + esc(p.price) + '<small><br>' + esc(p.price_note) + '</small></span>' +
+                    '<a class="btn btn-ghost btn-sm" href="code.html">查看实现</a>' +
+                '</div>' +
+            '</article>';
+        }).join('');
+    }
+
+    window.renderProducts = function (category) {
+        currentCategory = category || 'all';
+        Store.products.list({ category: currentCategory }).then(function (res) {
+            render(res.data || []);
+        });
+    };
+
+    window.renderProducts('all');
+
+    Site.init({ waves: false });
+})();
+</script>
+</body>
+</html>
