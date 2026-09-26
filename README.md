@@ -1,6 +1,6 @@
 # HHU VoiceEnhance
 
-在线访问： [https://lengkudexiatian.github.io/hhu-voice-enhanced-item/](https://lengkudexiatian.github.io/hhu-voice-enhanced-item/)
+在线访问： <https://lengkudexiatian.github.io/hhu-voice-enhanced-item/>
 
 ---
 
@@ -12,3 +12,4 @@
 
 原网站已关闭，后续可能会重新上线。  
 数据不会被长久保存，用户离开网页之后，上传的音频和增强后的音频会自动删除，不会侵犯隐私。
+
